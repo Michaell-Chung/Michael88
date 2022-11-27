@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,7 +23,7 @@ import org.w3c.dom.Text;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
     RecyclerView mRecyclerView;
     MyAdapter mMyAdapter ;
     List<News> mNewsList = new ArrayList<>();
@@ -40,8 +41,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onContextItemSelected(item);
     }
-    public void CreateMenu(Menu menu)
-    {
+    public void CreateMenu(Menu menu) {
         int groupID = 0;
         int order = 0;
         int[] itemID = {1,2};
@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,8 +118,15 @@ public class MainActivity extends AppCompatActivity {
                     return false;
                 }
             });
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent();
+                    intent.setClass(MainActivity.this,ContentActivity.class);
+                    startActivity(intent);
+                }
+            });
         }
-
         @Override
         public int getItemCount() {
             return mNewsList.size();
