@@ -1,8 +1,13 @@
 package com.example.michael;
 
-public class News {
+import java.io.Serializable;
+
+public class News implements Serializable {
     public String title;
-    public String content;
-    public String time;
+    public String author;
+    public String publish_time;
+    public String publish_house;
+    public String ISBN;
     public int Icon;
+
 }

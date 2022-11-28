@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -18,28 +17,32 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity  {
     RecyclerView mRecyclerView;
-    MyAdapter mMyAdapter ;
+    MyAdapter mMyAdapter;
     List<News> mNewsList = new ArrayList<>();
     List<Integer> drawImg = new ArrayList<>();
-
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case 1:
+                mNewsList.remove(item.getItemId());
+                mMyAdapter.notifyDataSetChanged();
                 break;
             case 2:
+
                 break;
             default:
                 break;
         }
         return super.onContextItemSelected(item);
+    }
+    public void deleteView(){
+
     }
     public void CreateMenu(Menu menu) {
         int groupID = 0;
@@ -51,10 +54,10 @@ public class MainActivity extends AppCompatActivity  {
             switch(itemID[i])
             {
                 case 1:
-                    menu.add(groupID, itemID[i], order, "义乌");
+                    menu.add(groupID, itemID[i], order, "删除");
                     break;
                 case 2:
-                    menu.add(groupID, itemID[i], order, "芝士雪豹");
+                    menu.add(groupID, itemID[i], order, "修改");
                     break;
                 default:
                     break;
@@ -74,8 +77,8 @@ public class MainActivity extends AppCompatActivity  {
         for (int i = 0; i < 10; i++) {
             News news = new News();
             news.title = "标题" + i;
-            news.content = "内容" + i;
-            news.time = "2022/11/25";
+            news.author = "michael" + i;
+            news.publish_time = "2022/11/25";
             news.Icon = drawImg.get(i%2);
 //            news.Icon = R.id.imageView;
             mNewsList.add(news);
@@ -85,7 +88,7 @@ public class MainActivity extends AppCompatActivity  {
         LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         mRecyclerView.setLayoutManager(layoutManager);
     }
-    class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHoder> {
+    class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         private Context mContext;
         private int position;
         public int getContextMenuPosition() { return position; }
@@ -94,22 +97,22 @@ public class MainActivity extends AppCompatActivity  {
 
         @NonNull
         @Override
-        public MyViewHoder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             if(mContext==null){
                 mContext = parent.getContext();
             }
             View view = View.inflate(MainActivity.this, R.layout.item_list, null);
-            MyViewHoder myViewHoder = new MyViewHoder(view);
-            return myViewHoder;
+            MyViewHolder myViewHolder = new MyViewHolder(view);
+            return myViewHolder;
         }
 
 
         @Override
-        public void onBindViewHolder(@NonNull MyViewHoder holder, int position) {
+        public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
             News news = mNewsList.get(position);
             holder.mTitleTv.setText(news.title);
-            holder.mTitleContent.setText(news.content);
-            holder.time.setText(news.time);
+            holder.mTitleContent.setText(news.author);
+            holder.time.setText(news.publish_time);
             holder.smallImg.setImageResource(news.Icon);
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -122,7 +125,10 @@ public class MainActivity extends AppCompatActivity  {
                 @Override
                 public void onClick(View view) {
                     Intent intent = new Intent();
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("news",mNewsList.get(holder.getAdapterPosition()));
                     intent.setClass(MainActivity.this,ContentActivity.class);
+                    intent.putExtras(bundle);
                     startActivity(intent);
                 }
             });
@@ -131,12 +137,12 @@ public class MainActivity extends AppCompatActivity  {
         public int getItemCount() {
             return mNewsList.size();
         }
-        class MyViewHoder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
+        class MyViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
             TextView mTitleTv;
             TextView mTitleContent;
             TextView time;
             ImageView smallImg;
-            public MyViewHoder(@NonNull View itemView) {
+            public MyViewHolder(@NonNull View itemView) {
                 super(itemView);
                 mTitleTv = itemView.findViewById(R.id.textView);
                 mTitleContent = itemView.findViewById(R.id.textView2);
