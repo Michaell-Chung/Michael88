@@ -1,5 +1,9 @@
 package com.example.michael;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -14,8 +18,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -26,11 +33,13 @@ public class MainActivity extends AppCompatActivity  {
     MyAdapter mMyAdapter;
     List<News> mNewsList = new ArrayList<>();
     List<Integer> drawImg = new ArrayList<>();
+    public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
+
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case 1:
-                mNewsList.remove(item.getItemId());
+                mNewsList.remove(mNewsList.get(mMyAdapter.getContextMenuPosition()));
                 mMyAdapter.notifyDataSetChanged();
                 break;
             case 2:
@@ -41,8 +50,15 @@ public class MainActivity extends AppCompatActivity  {
         }
         return super.onContextItemSelected(item);
     }
-    public void deleteView(){
-
+    public void addBookButtonListener(){
+        FloatingActionButton f = findViewById(R.id.addBookButton);
+        f.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mNewsList.add(new News());
+                mMyAdapter.notifyDataSetChanged();
+            }
+        });
     }
     public void CreateMenu(Menu menu) {
         int groupID = 0;
@@ -73,6 +89,20 @@ public class MainActivity extends AppCompatActivity  {
         mRecyclerView = findViewById(R.id.recyclerview);
         drawImg.add(R.drawable.fuck);
         drawImg.add(R.drawable.desert);
+        edit_result = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        Intent intent = result.getData();
+                        String return_back = intent.getStringExtra("status_code");
+                        if(return_back.equals("save")){
+                            Bundle bundle = intent.getExtras();
+                            mNewsList.set(mMyAdapter.getContextMenuPosition(),(News)bundle.getSerializable("edit_update"));
+                            mMyAdapter.notifyDataSetChanged();
+                        }
+                    }
+                });
         // 构造一些数据
         for (int i = 0; i < 10; i++) {
             News news = new News();
@@ -80,6 +110,7 @@ public class MainActivity extends AppCompatActivity  {
             news.author = "michael" + i;
             news.publish_time = "2022/11/25";
             news.Icon = drawImg.get(i%2);
+            news.image_path = "NULL";
 //            news.Icon = R.id.imageView;
             mNewsList.add(news);
         }
@@ -87,6 +118,7 @@ public class MainActivity extends AppCompatActivity  {
         mRecyclerView.setAdapter(mMyAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         mRecyclerView.setLayoutManager(layoutManager);
+        addBookButtonListener();
     }
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         private Context mContext;
@@ -129,7 +161,8 @@ public class MainActivity extends AppCompatActivity  {
                     bundle.putSerializable("news",mNewsList.get(holder.getAdapterPosition()));
                     intent.setClass(MainActivity.this,ContentActivity.class);
                     intent.putExtras(bundle);
-                    startActivity(intent);
+                    edit_result.launch(intent);
+//                    startActivity(intent);
                 }
             });
         }

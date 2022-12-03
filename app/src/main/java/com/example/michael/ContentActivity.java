@@ -1,21 +1,22 @@
 package com.example.michael;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-import java.util.Map;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 public class ContentActivity extends AppCompatActivity {
-
+    Button savebtn;
+    Button cancelbtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,6 +26,32 @@ public class ContentActivity extends AppCompatActivity {
         News news = (News) bundle.getSerializable("news");
         ViewHolder viewHolder = new ViewHolder();
         viewHolder.set(news);
+        savebtn = findViewById(R.id.save_button);
+        savebtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                News update = viewHolder.get(new News());
+                bundle.putSerializable("edit_update",update);
+                intent.putExtra("status_code","save");
+                intent.putExtras(bundle);
+                setResult(RESULT_OK,intent);
+                finish();
+            }
+        });
+        cancelbtn = findViewById(R.id.cancel_button);
+        cancelbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setResult(RESULT_OK,intent);
+                intent.putExtra("status_code","cancel");
+                finish();
+            }
+        });
+    }
+    @Override
+    public void onBackPressed() {
+//        super.onBackPressed();
+        cancelbtn.callOnClick();
     }
     class ViewHolder{
         TextView title;
@@ -47,7 +74,32 @@ public class ContentActivity extends AppCompatActivity {
             publish_time.setText(news.publish_time);
             publish_house.setText(news.publish_house);
             ISBN.setText(news.ISBN);
-            Icon.setImageResource(news.Icon);
+            if(news.image_path.equals("NULL")){
+                Icon.setImageResource(news.Icon);
+            }
+            else{
+                Bitmap bitmap = getResource(news.image_path);
+                Icon.setImageBitmap(bitmap);
+            }
         }
+        public News get(News news){
+            news.author = author.getText().toString();
+            news.title = title.getText().toString();
+            news.publish_time = publish_time.getText().toString();
+            news.ISBN = ISBN.getText().toString();
+            news.publish_house = publish_house.getText().toString();
+            news.image_path = "NULL";
+            return news;
+        }
+    }
+    public Bitmap getResource(String imageName) {
+        Bitmap bitmap = null;
+        try {
+            FileInputStream localStream = this.openFileInput(imageName);
+            bitmap = BitmapFactory.decodeStream(localStream);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return bitmap;
     }
 }

@@ -9,5 +9,5 @@ public class News implements Serializable {
     public String publish_house;
     public String ISBN;
     public int Icon;
-
+    public String image_path;
 }
