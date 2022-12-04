@@ -5,24 +5,26 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
@@ -30,9 +32,11 @@ public class ContentActivity extends AppCompatActivity {
     Button savebtn;
     Button cancelbtn;
     ImageView imageView;
+    Uri uri = null;
     String img_uri = "NULL";
     Context context;
-    public ActivityResultLauncher get_img;
+    public ActivityResultLauncher getImg_local;
+    public ActivityResultLauncher getImg_carama;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,30 +70,87 @@ public class ContentActivity extends AppCompatActivity {
                 finish();
             }
         });
-        edit_img();
-    }
-    public void edit_img(){
-        get_img = registerForActivityResult(
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                createPopupMenu(imageView);
+            }
+        });
+        getImg_local = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
                     @Override
                     public void onActivityResult(ActivityResult result) {
                         Intent intent = result.getData();
-                        Glide.with(context).load(intent.getData()).into(imageView);
-                        Log.i("Image_uri",intent.getData().toString());
                         img_uri = intent.getData().toString();
+                        Glide.with(context).load(img_uri).into(imageView);
+                        Log.i("Image_uri",intent.getData().toString());
                         onResume();
                     }
                 }
         );
-        imageView.setOnClickListener(new View.OnClickListener() {
+        getImg_carama = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        Intent intent = result.getData();
+//                        img_uri = intent.getStringExtra(MediaStore.EXTRA_OUTPUT);
+                        Glide.with(context).load(uri).into(imageView);
+                        onResume();
+                    }
+                }
+        );
+    }
+    public void createPopupMenu(View view){
+        PopupMenu popupMenu = new PopupMenu(this,view);
+        popupMenu.inflate(R.menu.imgedit_menu);
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+
             @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                get_img.launch(intent);
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                switch (menuItem.getItemId()){
+                    case R.id.camarabtn:
+                        editimg_camara();
+                        return true;
+                    case R.id.localbtn:
+                        editimg_local();
+                        return true;
+                }
+                return false;
             }
         });
+        popupMenu.show();
+    }
+    //相册中选择图片
+    public void editimg_local(){
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        getImg_local.launch(intent);
+//        imageView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+//                intent.setType("image/*");
+//                get_img.launch(intent);
+//            }
+//        });
+    }
+    public void editimg_camara(){
+        File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
+        try {
+            if(outputImage.exists()){
+                outputImage.delete();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        uri = FileProvider.getUriForFile(context,"com.example.michael.fileProvider",outputImage);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Log.i("uri!!!",uri.toString());
+        img_uri = uri.toString();
+        intent.putExtra(MediaStore.EXTRA_OUTPUT,uri);
+        getImg_carama.launch(intent);
     }
     @Override
     public void onBackPressed() {

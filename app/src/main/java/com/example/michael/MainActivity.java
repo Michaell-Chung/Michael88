@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity  {
     RecyclerView mRecyclerView;
     MyAdapter mMyAdapter;
     List<News> mNewsList = new ArrayList<>();
-    List<Integer> drawImg = new ArrayList<>();
     public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
 
     @Override
@@ -98,8 +97,6 @@ public class MainActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mRecyclerView = findViewById(R.id.recyclerview);
-        drawImg.add(R.drawable.fuck);
-        drawImg.add(R.drawable.desert);
         edit_result = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {

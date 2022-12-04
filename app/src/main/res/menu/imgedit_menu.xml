@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/camarabtn"
+        android:title="使用相机拍摄照片" />
+    <item
+        android:id="@+id/localbtn"
+        android:title="从本地选择照片" />
+</menu>
