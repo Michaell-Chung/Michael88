@@ -1,15 +1,27 @@
 package com.example.michael;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,10 +29,16 @@ import java.io.FileNotFoundException;
 public class ContentActivity extends AppCompatActivity {
     Button savebtn;
     Button cancelbtn;
+    ImageView imageView;
+    String img_uri = "NULL";
+    Context context;
+    public ActivityResultLauncher get_img;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_content);
+        context = this.getApplicationContext();
+        imageView = findViewById(R.id.imageView2);
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         News news = (News) bundle.getSerializable("news");
@@ -33,6 +51,7 @@ public class ContentActivity extends AppCompatActivity {
                 News update = viewHolder.get(new News());
                 bundle.putSerializable("edit_update",update);
                 intent.putExtra("status_code","save");
+                intent.putExtra("position",bundle.getInt("position"));
                 intent.putExtras(bundle);
                 setResult(RESULT_OK,intent);
                 finish();
@@ -45,6 +64,30 @@ public class ContentActivity extends AppCompatActivity {
                 setResult(RESULT_OK,intent);
                 intent.putExtra("status_code","cancel");
                 finish();
+            }
+        });
+        edit_img();
+    }
+    public void edit_img(){
+        get_img = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        Intent intent = result.getData();
+                        Glide.with(context).load(intent.getData()).into(imageView);
+                        Log.i("Image_uri",intent.getData().toString());
+                        img_uri = intent.getData().toString();
+                        onResume();
+                    }
+                }
+        );
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                get_img.launch(intent);
             }
         });
     }
@@ -78,8 +121,7 @@ public class ContentActivity extends AppCompatActivity {
                 Icon.setImageResource(news.Icon);
             }
             else{
-                Bitmap bitmap = getResource(news.image_path);
-                Icon.setImageBitmap(bitmap);
+                Glide.with(context).load(news.image_path).into(imageView);
             }
         }
         public News get(News news){
@@ -88,7 +130,7 @@ public class ContentActivity extends AppCompatActivity {
             news.publish_time = publish_time.getText().toString();
             news.ISBN = ISBN.getText().toString();
             news.publish_house = publish_house.getText().toString();
-            news.image_path = "NULL";
+            news.image_path = img_uri;
             return news;
         }
     }

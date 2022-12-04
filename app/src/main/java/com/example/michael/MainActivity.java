@@ -22,9 +22,16 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +48,12 @@ public class MainActivity extends AppCompatActivity  {
             case 1:
                 mNewsList.remove(mNewsList.get(mMyAdapter.getContextMenuPosition()));
                 mMyAdapter.notifyDataSetChanged();
+                save();
                 break;
             case 2:
-
+                mNewsList.clear();
+                mMyAdapter.notifyDataSetChanged();
+                save();
                 break;
             default:
                 break;
@@ -55,8 +65,9 @@ public class MainActivity extends AppCompatActivity  {
         f.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mNewsList.add(new News());
+                mNewsList.add(0,new News());
                 mMyAdapter.notifyDataSetChanged();
+                save();
             }
         });
     }
@@ -73,7 +84,7 @@ public class MainActivity extends AppCompatActivity  {
                     menu.add(groupID, itemID[i], order, "删除");
                     break;
                 case 2:
-                    menu.add(groupID, itemID[i], order, "修改");
+                    menu.add(groupID, itemID[i], order, "清空所有图书");
                     break;
                 default:
                     break;
@@ -98,22 +109,24 @@ public class MainActivity extends AppCompatActivity  {
                         String return_back = intent.getStringExtra("status_code");
                         if(return_back.equals("save")){
                             Bundle bundle = intent.getExtras();
-                            mNewsList.set(mMyAdapter.getContextMenuPosition(),(News)bundle.getSerializable("edit_update"));
+                            mNewsList.set(bundle.getInt("position"),(News)bundle.getSerializable("edit_update"));
                             mMyAdapter.notifyDataSetChanged();
+                            save();
                         }
                     }
                 });
         // 构造一些数据
-        for (int i = 0; i < 10; i++) {
-            News news = new News();
-            news.title = "标题" + i;
-            news.author = "michael" + i;
-            news.publish_time = "2022/11/25";
-            news.Icon = drawImg.get(i%2);
-            news.image_path = "NULL";
-//            news.Icon = R.id.imageView;
-            mNewsList.add(news);
-        }
+//        for (int i = 0; i < 10; i++) {
+//            News news = new News();
+//            news.title = "标题" + i;
+//            news.author = "michael" + i;
+//            news.publish_time = "2022/11/25";
+//            news.Icon = drawImg.get(i%2);
+//            news.image_path = "NULL";
+//            mNewsList.add(news);
+//        }
+        read();
+
         mMyAdapter = new MyAdapter();
         mRecyclerView.setAdapter(mMyAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
@@ -145,7 +158,9 @@ public class MainActivity extends AppCompatActivity  {
             holder.mTitleTv.setText(news.title);
             holder.mTitleContent.setText(news.author);
             holder.time.setText(news.publish_time);
-            holder.smallImg.setImageResource(news.Icon);
+            if(news.image_path=="NULL")
+                holder.smallImg.setImageResource(news.Icon);
+            else Glide.with(MainActivity.this).load(news.image_path).into(holder.smallImg);
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
@@ -159,6 +174,7 @@ public class MainActivity extends AppCompatActivity  {
                     Intent intent = new Intent();
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("news",mNewsList.get(holder.getAdapterPosition()));
+                    bundle.putInt("position",holder.getAdapterPosition());
                     intent.setClass(MainActivity.this,ContentActivity.class);
                     intent.putExtras(bundle);
                     edit_result.launch(intent);
@@ -183,13 +199,48 @@ public class MainActivity extends AppCompatActivity  {
                 smallImg = itemView.findViewById(R.id.imageView);
                 itemView.setOnCreateContextMenuListener(this);
             }
-
             @Override
             public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
                 News mSelectModelUser = mNewsList.get(getContextMenuPosition());
                 Log.i("UserAdapter", "onCreateContextMenu: "+getContextMenuPosition());
                 contextMenu.setHeaderTitle(mSelectModelUser.title);
                 ((MainActivity)mContext).CreateMenu(contextMenu);
+            }
+        }
+    }
+    public void save(){
+        FileOutputStream out = null;
+        try{
+            out = this.openFileOutput("book.ser", Context.MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(mNewsList);
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(out != null)
+                    out.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+    public void read(){
+        FileInputStream in = null;
+        try{
+            in = this.openFileInput("book.ser");
+            ObjectInputStream ois = new ObjectInputStream(in);
+            //Log.e("这里没问题","这里没问题");
+            mNewsList = (List<News>) ois.readObject();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(in != null){
+                try{
+                    in.close();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
             }
         }
     }
