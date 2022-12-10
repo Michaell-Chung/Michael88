@@ -11,7 +11,7 @@
         android:layout_height="33dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="28dp"
-        android:text="标题"
+        android:hint="Title"
         android:textSize="65px"
         app:layout_constraintStart_toEndOf="@+id/imageView"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,7 +22,7 @@
         android:layout_height="25dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="28dp"
-        android:text="内容哈哈哈哈"
+        android:hint="content"
         app:layout_constraintStart_toEndOf="@+id/imageView"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
@@ -32,7 +32,7 @@
         android:layout_height="29dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="88dp"
-        android:text="时间"
+        android:hint="time"
         app:layout_constraintStart_toEndOf="@+id/textView2"
         app:layout_constraintTop_toTopOf="parent" />
 

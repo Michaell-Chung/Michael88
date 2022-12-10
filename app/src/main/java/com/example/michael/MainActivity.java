@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -39,7 +40,43 @@ public class MainActivity extends AppCompatActivity  {
     RecyclerView mRecyclerView;
     MyAdapter mMyAdapter;
     List<News> mNewsList = new ArrayList<>();
+    List<News> keepList = new ArrayList<>();
     public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        keepList = mNewsList;
+        getMenuInflater().inflate(R.menu.search_menu,menu);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+            @Override
+            public boolean onQueryTextChange(String s) {
+                List<News> mTmpList=new ArrayList<News>();
+                for (News n:
+                     keepList) {
+                    if(n.title.indexOf(s) != -1 || n.author.indexOf(s) != -1){
+                        mTmpList.add(n);
+                    }
+                }
+                mNewsList=mTmpList;
+                mMyAdapter.notifyDataSetChanged();
+                return false;
+            }
+        });
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                mNewsList = keepList;
+                mMyAdapter.notifyDataSetChanged();
+                return false;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
 
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
@@ -96,6 +133,9 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
         mRecyclerView = findViewById(R.id.recyclerview);
         edit_result = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
