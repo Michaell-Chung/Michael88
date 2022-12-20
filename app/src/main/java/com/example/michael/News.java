@@ -10,6 +10,7 @@ public class News implements Serializable {
     public String ISBN;
     public int Icon;
     public String image_path;
+    public String tag;
     public News(){
         this.title = "TitleHere";
         this.author = "AuthorHere";
@@ -18,5 +19,6 @@ public class News implements Serializable {
         this.ISBN = "ISBNHere";
         this.Icon = R.drawable.desert;
         this.image_path = "NULL";
+        this.tag = "NULL";
     }
 }

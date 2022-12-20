@@ -47,15 +47,28 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
     MyAdapter mMyAdapter;
     List<News> mNewsList = new ArrayList<>();
     List<News> keepList = new ArrayList<>();
+    List<String> tagList = new ArrayList<>();
 
     public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
     //call back mainActivity's listener
+
+    public interface getTagList{
+        List<String> getTagList();
+    }
+    public void updateTagList(){
+        tagList.clear();
+        tagList.add("default");
+        for(News n:mNewsList){
+            if(n.tag!="NULL")tagList.add(n.tag);
+        }
+//        if(tagList.size()==0)tagList.add("NULL");
+    }
     @Override
     public void OnSearchActivity(String s) {
         List<News> mTmpList=new ArrayList<News>();
         for (News n:
                 keepList) {
-            if(n.title.toLowerCase().indexOf(s) != -1 || n.author.toLowerCase().indexOf(s) != -1){
+            if(n.title.toLowerCase().indexOf(s.toLowerCase()) != -1 || n.author.toLowerCase().indexOf(s.toLowerCase()) != -1){
                 mTmpList.add(n);
             }
         }
@@ -68,33 +81,6 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
         mMyAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        keepList = mNewsList;
-        inflater.inflate(R.menu.search_menu,menu);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                return false;
-            }
-            @Override
-            public boolean onQueryTextChange(String s) {
-                List<News> mTmpList=new ArrayList<News>();
-                for (News n:
-                        keepList) {
-                    if(n.title.indexOf(s) != -1 || n.author.indexOf(s) != -1){
-                        mTmpList.add(n);
-                    }
-                }
-                mNewsList=mTmpList;
-                mMyAdapter.notifyDataSetChanged();
-                return false;
-            }
-        });
-
-    }
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
@@ -192,7 +178,8 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_bookshelf, container, false);
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-
+        //添加各个元素的tag到list里面
+        updateTagList();
         mRecyclerView = view.findViewById(R.id.recyclerview);
         edit_result = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -205,6 +192,7 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
                             Bundle bundle = intent.getExtras();
                             mNewsList.set(bundle.getInt("position"),(News)bundle.getSerializable("edit_update"));
                             mMyAdapter.notifyDataSetChanged();
+                            updateTagList();
                             save();
                         }
                     }
@@ -261,6 +249,7 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("news",mNewsList.get(holder.getAdapterPosition()));
                     bundle.putInt("position",holder.getAdapterPosition());
+                    bundle.putStringArrayList("tagList",(ArrayList<String>) tagList);
                     intent.setClass(getContext(),ContentActivity.class);
                     intent.putExtras(bundle);
                     edit_result.launch(intent);
@@ -296,17 +285,21 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
     }
 
     public void save(){
-        FileOutputStream out = null;
+        FileOutputStream book_tag = null;
+        List[] lists = {mNewsList,tagList};
         try{
-            out = getActivity().openFileOutput("book.ser", Context.MODE_PRIVATE);
-            ObjectOutputStream oos = new ObjectOutputStream(out);
-            oos.writeObject(mNewsList);
+            book_tag = getActivity().openFileOutput("book.ser", Context.MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(book_tag);
+            oos.writeObject(lists);
+            oos.close();
+            //            oos.writeObject(mNewsList);
+//            oos.writeObject(tagList);
         }catch (IOException e){
             e.printStackTrace();
         }finally {
             try{
-                if(out != null)
-                    out.close();
+                if(book_tag != null)
+                    book_tag.close();
             }catch (IOException e){
                 e.printStackTrace();
             }
@@ -318,7 +311,10 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
             in = getActivity().openFileInput("book.ser");
             ObjectInputStream ois = new ObjectInputStream(in);
             //Log.e("这里没问题","这里没问题");
-            mNewsList = (List<News>) ois.readObject();
+            Object[] object = (Object[]) ois.readObject();
+            mNewsList =(List<News>) object[0];
+            tagList = (List<String>) object[1];
+            ois.close();
         }catch (Exception e){
             e.printStackTrace();
         }finally {

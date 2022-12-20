@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         void OnCloseSearchActivity();
     }
 
+    //因为搜索键在activity上面所以只能在activity触发了，写了个接口回调触发
     @Override
     public void onAttachFragment(Fragment fragment) {
         try {
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         mTitles.add("secondBkshelf");
         //add fragment
         mFragments.add(new BookshelfFragment());
-        mFragments.add(new testFragment());
+        mFragments.add(new tagFragment());
         //实例化适配器
         FraAdapter myAdapter=new FraAdapter(getSupportFragmentManager(),getLifecycle(),mFragments);
         //设置适配器
