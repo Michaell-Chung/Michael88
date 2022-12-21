@@ -106,7 +106,7 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.book_classify_layout, container, false);
-        Bundle bundle = new Bundle();
+        Bundle bundle = getArguments();
         myTitle = bundle.getString("title");
         mRecyclerView = view.findViewById(R.id.recyclerview);
         edit_result = registerForActivityResult(
