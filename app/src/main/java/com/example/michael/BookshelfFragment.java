@@ -52,16 +52,35 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
     public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
     //call back mainActivity's listener
 
-    public interface getTagList{
-        List<String> getTagList();
-    }
+
     public void updateTagList(){
-        tagList.clear();
-        tagList.add("default");
-        for(News n:mNewsList){
-            if(n.tag!="NULL")tagList.add(n.tag);
+        if(tagList.size()==0)tagList.add("NULL");
+        for(int i=0;i<tagList.size();i++){
+            for(int j=i;j<mNewsList.size();j++){
+                if(tagList.get(i).equals(mNewsList.get(i).tag)){
+                    continue;
+                }
+                else{
+                    tagList.add(mNewsList.get(i).tag);
+                }
+            }
         }
-//        if(tagList.size()==0)tagList.add("NULL");
+        if(tagList.size()!=0) {
+            for (int i = 0; i < tagList.size(); i++) {
+                for (int j =i+1; j < tagList.size(); j++) {
+                    if(tagList.get(i).equals(tagList.get(j))){
+                        tagList.remove(j);
+                        j--;
+                    }
+                }
+            }
+            for (int i = 0; i < tagList.size(); i++) {
+                if (tagList.get(i).equals("NULL")) {
+                    tagList.remove(i);
+                }
+            }
+        }
+        else if(tagList.size()==0)tagList.add("NULL");
     }
     @Override
     public void OnSearchActivity(String s) {
@@ -131,33 +150,14 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
         }
     }
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     public BookshelfFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment BookshelfFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static BookshelfFragment newInstance(String param1, String param2) {
         BookshelfFragment fragment = new BookshelfFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+
         fragment.setArguments(args);
         return fragment;
     }
@@ -166,8 +166,7 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+
         }
 
     }
@@ -191,8 +190,8 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
                         if(return_back.equals("save")){
                             Bundle bundle = intent.getExtras();
                             mNewsList.set(bundle.getInt("position"),(News)bundle.getSerializable("edit_update"));
-                            mMyAdapter.notifyDataSetChanged();
                             updateTagList();
+                            mMyAdapter.notifyDataSetChanged();
                             save();
                         }
                     }
@@ -210,10 +209,12 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         private Context mContext;
         private int position;
+        ArrayList<String> tagList;
         public int getContextMenuPosition() { return position; }
         public void setContextMenuPosition(int position) { this.position = position; }
-
-
+        MyAdapter(){
+             tagList= (ArrayList<String>) BookshelfFragment.this.tagList;
+        }
         @NonNull
         @Override
         public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -225,10 +226,10 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
             return myViewHolder;
         }
 
-
         @Override
         public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
             News news = mNewsList.get(position);
+
             holder.mTitleTv.setText(news.title);
             holder.mTitleContent.setText(news.author);
             holder.time.setText(news.publish_time);
@@ -245,11 +246,12 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    updateTagList();
                     Intent intent = new Intent();
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("news",mNewsList.get(holder.getAdapterPosition()));
                     bundle.putInt("position",holder.getAdapterPosition());
-                    bundle.putStringArrayList("tagList",(ArrayList<String>) tagList);
+                    bundle.putStringArrayList("tagList", tagList);
                     intent.setClass(getContext(),ContentActivity.class);
                     intent.putExtras(bundle);
                     edit_result.launch(intent);
