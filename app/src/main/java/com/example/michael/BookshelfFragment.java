@@ -10,7 +10,6 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,7 +18,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,25 +32,34 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link BookshelfFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BookshelfFragment extends Fragment implements MainActivity.OnClickActivityListener{
+public class BookshelfFragment extends Fragment implements MainActivity.OnClickActivityListener, Serializable {
     RecyclerView mRecyclerView;
     MyAdapter mMyAdapter;
+    boolean isFirstLoading;
     List<News> mNewsList = new ArrayList<>();
     List<News> keepList = new ArrayList<>();
     List<String> tagList = new ArrayList<>();
     MainActivity mainActivity;
     public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
     //call back mainActivity's listener
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!isFirstLoading) {
+            read();
+            mMyAdapter.notifyDataSetChanged();
+        }
+        isFirstLoading = false;
+    }
     @Override
     public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
@@ -185,7 +192,8 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         //添加各个元素的tag到list里面
         updateTagList();
-        mRecyclerView = view.findViewById(R.id.recyclerview);
+        isFirstLoading = true;
+        mRecyclerView = view.findViewById(R.id.recyclerview2);
         edit_result = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -197,10 +205,10 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
                             Bundle bundle = intent.getExtras();
                             mNewsList.set(bundle.getInt("position"),(News)bundle.getSerializable("edit_update"));
                             updateTagList();
-                            mainActivity.mTagList =tagList;
-                            mainActivity.createFragment();
                             mMyAdapter.notifyDataSetChanged();
                             save();
+                            mainActivity.mTagList =tagList;
+                            mainActivity.createFragment();
                         }
                     }
                 });

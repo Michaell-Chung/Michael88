@@ -2,6 +2,8 @@ package com.example.michael;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Context;
 import android.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -16,10 +18,16 @@ import android.view.Menu;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Serializable {
     private TabLayout myTab;
     private ViewPager2 myPager2;
     private OnClickActivityListener mOnClickActivityListener;
@@ -27,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     List<Fragment> mFragments = new ArrayList<>();
     List<String> mTitles = new ArrayList<>();
     List<String> mTagList = new ArrayList<>();
-    List<String> mNewTagList = new ArrayList<>();
+
     public interface OnClickActivityListener{
         void OnSearchActivity(String s);
         void OnCloseSearchActivity();
@@ -73,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         });
         return super.onCreateOptionsMenu(menu);
     }
+
     public void createFragment(){
         int x=mFragments.size();
         for(int i=1;i<x;i++){
@@ -94,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 tab.setText(mTitles.get(position));
             }
         }).attach();
+        save();
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,12 +112,7 @@ public class MainActivity extends AppCompatActivity {
         myTab = findViewById(R.id.my_tab);
         myPager2 = findViewById(R.id.my_pager2);
         //add title
-        mTitles.add("Bookshelf");
-        mTagList.add("Bookshelf");
-//        mTitles.add("secondBkshelf");
-        //add fragment
-        mFragments.add(new BookshelfFragment());
-//        mFragments.add(new tagFragment());
+        read();
         //实例化适配器
         FraAdapter myAdapter=new FraAdapter(getSupportFragmentManager(),getLifecycle(),mFragments);
         //设置适配器
@@ -120,6 +125,21 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attach();
     }
+    public void initFragment(){
+        mTitles.add("Bookshelf");
+        mTagList.add("Bookshelf");
+        mFragments.add(new BookshelfFragment());
+        FraAdapter myAdapter=new FraAdapter(getSupportFragmentManager(),getLifecycle(),mFragments);
+        //设置适配器
+        myPager2.setAdapter(myAdapter);
+        new TabLayoutMediator(myTab, myPager2, new TabLayoutMediator.TabConfigurationStrategy() {
+            @Override
+            public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+                tab.setText(mTitles.get(position));
+            }
+        }).attach();
+    }
+
     class FraAdapter extends FragmentStateAdapter{
         List<Fragment> mFragments;
         int position;
@@ -139,5 +159,46 @@ public class MainActivity extends AppCompatActivity {
             return mFragments.size();
         }
 
+    }
+    public void save(){
+        FileOutputStream book_tag = null;
+        List[] lists = {mFragments,mTitles};
+        try{
+            book_tag = this.openFileOutput("fragment.ser", Context.MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(book_tag);
+            oos.writeObject(lists);
+            oos.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(book_tag != null)
+                    book_tag.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+    public void read(){
+        FileInputStream in = null;
+        try{
+            in = this.openFileInput("fragment.ser");
+            ObjectInputStream ois = new ObjectInputStream(in);
+            Object[] objects = (Object[]) ois.readObject();
+            mFragments = (ArrayList<Fragment>) objects[0];
+            mTitles = (ArrayList<String>) objects[1];
+            ois.close();
+        }catch (Exception e){
+            initFragment();
+            e.printStackTrace();
+        }finally {
+            if(in != null){
+                try{
+                    in.close();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

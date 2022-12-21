@@ -138,7 +138,7 @@ public class ContentActivity extends AppCompatActivity {
                 alert_edit(b);
                 break;
             default:
-                b.setText(tagList.get(item.getItemId()));
+                b.setText(tagList.get(item.getItemId()-1));
                 break;
         }
         return super.onContextItemSelected(item);
@@ -170,7 +170,7 @@ public class ContentActivity extends AppCompatActivity {
         int groupID = 0;
         int order = 0;
         List<Integer> itemID = new ArrayList<>();
-        for(int i=0;i<tagList.size();i++){
+        for(int i=0;i<tagList.size()+1;i++){
             itemID.add(i);
         }
         for(int i=0;i<itemID.size();i++)
@@ -181,7 +181,7 @@ public class ContentActivity extends AppCompatActivity {
                     menu.add(groupID, itemID.get(i), order, "自定义新书架");
                     break;
                 default:
-                    menu.add(groupID,itemID.get(i),order,tagList.get(i));
+                    menu.add(groupID,itemID.get(i),order,tagList.get(i-1));
                     break;
             }
         }

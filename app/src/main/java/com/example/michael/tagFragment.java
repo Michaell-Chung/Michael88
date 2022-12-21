@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,8 +39,9 @@ import java.util.List;
  * Use the {@link tagFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class tagFragment extends Fragment implements MainActivity.OnClickActivityListener{
+public class tagFragment extends Fragment implements MainActivity.OnClickActivityListener, Serializable {
     RecyclerView mRecyclerView;
+    boolean isFirstLoading;
     MyAdapter mMyAdapter;
     List<News> mNewsList = new ArrayList<>();
     List<News> keepList = new ArrayList<>();
@@ -51,13 +53,22 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
         // Required empty public constructor
     }
 
+
     public static tagFragment newInstance(String param1, String param2) {
         tagFragment fragment = new tagFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
     }
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!isFirstLoading) {
+            read();
+            mMyAdapter.notifyDataSetChanged();
+        }
+        isFirstLoading = false;
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,8 +118,9 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.book_classify_layout, container, false);
         Bundle bundle = getArguments();
+        isFirstLoading = true;
         myTitle = bundle.getString("title");
-        mRecyclerView = view.findViewById(R.id.recyclerview);
+        mRecyclerView = view.findViewById(R.id.recyclerview2);
         edit_result = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -130,8 +142,12 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
         keepList = mNewsList;
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(layoutManager);
+
+
+
         return view;
     }
+
     public void CreateMenu(Menu menu) {
         int groupID = 0;
         int order = 0;
@@ -152,6 +168,7 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
             }
         }
     }
+
     class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         private Context mContext;
         private int position;
@@ -255,6 +272,7 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
         List<News> tmpList = new ArrayList<>();
         FileInputStream in = null;
         try{
+            mNewsList.clear();
             in = getActivity().openFileInput("book.ser");
             ObjectInputStream ois = new ObjectInputStream(in);
             //Log.e("这里没问题","这里没问题");
@@ -266,6 +284,7 @@ public class tagFragment extends Fragment implements MainActivity.OnClickActivit
                 }
             }
             tagList = (List<String>) object[1];
+            mMyAdapter.notifyDataSetChanged();
             ois.close();
         }catch (Exception e){
             e.printStackTrace();
