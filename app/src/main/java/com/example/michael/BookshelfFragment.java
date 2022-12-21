@@ -1,5 +1,6 @@
 package com.example.michael;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -48,10 +49,15 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
     List<News> mNewsList = new ArrayList<>();
     List<News> keepList = new ArrayList<>();
     List<String> tagList = new ArrayList<>();
-
+    MainActivity mainActivity;
     public ActivityResultLauncher edit_result;//接收编辑的activity保存结束后的callback数据
     //call back mainActivity's listener
 
+    @Override
+    public void onAttach(@NonNull Activity activity) {
+        super.onAttach(activity);
+        mainActivity = (MainActivity) activity;
+    }
 
     public void updateTagList(){
         if(tagList.size()==0)tagList.add("NULL");
@@ -191,6 +197,8 @@ public class BookshelfFragment extends Fragment implements MainActivity.OnClickA
                             Bundle bundle = intent.getExtras();
                             mNewsList.set(bundle.getInt("position"),(News)bundle.getSerializable("edit_update"));
                             updateTagList();
+                            mainActivity.mTagList =tagList;
+                            mainActivity.createFragment();
                             mMyAdapter.notifyDataSetChanged();
                             save();
                         }

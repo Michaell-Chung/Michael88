@@ -26,7 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     List<Fragment> mFragments = new ArrayList<>();
     List<String> mTitles = new ArrayList<>();
-
+    List<String> mTagList = new ArrayList<>();
+    List<String> mNewTagList = new ArrayList<>();
     public interface OnClickActivityListener{
         void OnSearchActivity(String s);
         void OnCloseSearchActivity();
@@ -72,7 +73,28 @@ public class MainActivity extends AppCompatActivity {
         });
         return super.onCreateOptionsMenu(menu);
     }
-
+    public void createFragment(){
+        int x=mFragments.size();
+        for(int i=1;i<x;i++){
+            mFragments.remove(1);
+            mTitles.remove(1);
+        }
+        for(int i=0;i<mTagList.size();i++){
+            String title = mTagList.get(i);
+            mTitles.add(title);
+            Fragment f = new tagFragment();
+            Bundle b = new Bundle();
+            b.putString("title",title);
+            f.setArguments(b);
+            mFragments.add(f);
+        }
+        new TabLayoutMediator(myTab, myPager2, new TabLayoutMediator.TabConfigurationStrategy() {
+            @Override
+            public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
+                tab.setText(mTitles.get(position));
+            }
+        }).attach();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,10 +103,11 @@ public class MainActivity extends AppCompatActivity {
         myPager2 = findViewById(R.id.my_pager2);
         //add title
         mTitles.add("Bookshelf");
-        mTitles.add("secondBkshelf");
+        mTagList.add("Bookshelf");
+//        mTitles.add("secondBkshelf");
         //add fragment
         mFragments.add(new BookshelfFragment());
-        mFragments.add(new tagFragment());
+//        mFragments.add(new tagFragment());
         //实例化适配器
         FraAdapter myAdapter=new FraAdapter(getSupportFragmentManager(),getLifecycle(),mFragments);
         //设置适配器
